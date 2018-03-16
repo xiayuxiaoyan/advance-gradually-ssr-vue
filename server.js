@@ -4,6 +4,8 @@ const fs = require('fs')
 const path = require('path')
 var opn = require('opn')
 const { createBundleRenderer } = require('vue-server-renderer')
+const koaBody = require('koa-body');
+app.use(koaBody());
 
 const resolve = file => path.resolve(__dirname, file)
 
@@ -28,16 +30,24 @@ app.use(require('koa-static')(resolve('./dist')))
 // response
 app.use(async (ctx, next) => {
   try {
-    const context = {
-      title: '服务端渲染测试', // {{title}}
-      url: ctx.url
+    if(ctx.request.path == '/api'){
+      ctx.body = {
+        'errno': 0,
+        data: 'index page'
+      };
     }
-    // 将服务器端渲染好的html返回给客户端
-    ctx.body = await renderToString(context)
+    else {
+      const context = {
+        title: '服务端渲染测试', // {{title}}
+        url: ctx.url
+      }
+      // 将服务器端渲染好的html返回给客户端
+      ctx.body = await renderToString(context)
 
-    // 设置请求头
-    ctx.set('Content-Type', 'text/html')
-    ctx.set('Server', 'Koa2 server side render')
+      // 设置请求头
+      ctx.set('Content-Type', 'text/html')
+      ctx.set('Server', 'Koa2 server side render')
+    }
   } catch (e) {
     // 如果没找到，放过请求，继续运行后面的中间件
     next()
